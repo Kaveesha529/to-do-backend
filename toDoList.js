@@ -103,4 +103,11 @@ router.patch('/:listId/tasks/:taskId', async (req, res) => {
     }
 })
 
+router.get('/health', (req, res) => {
+    res.status(200).json({
+        status: "ok",
+        message: "Server is running"
+    })
+})
+
 module.exports = router
