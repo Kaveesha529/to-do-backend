@@ -1,3 +1,5 @@
+require("dotenv").config()
+
 const cors = require('cors')
 const express = require('express')
 const mongoose = require('mongoose')
@@ -12,7 +14,7 @@ app.use(express.json())
 
 app.use('/api/todo-list', toDoListRouter)
 
-mongoose.connect('mongodb+srv://knbalasooriya529_db_user:MK4Ed1oC770ViHqi@to-do-db.cquvgrx.mongodb.net/?appName=to-do-db')
+mongoose.connect(process.env.MONGO_URI)
     .then(() => {
         console.log('Connected to the database')
         app.listen(3000, () => {
