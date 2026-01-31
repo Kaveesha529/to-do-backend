@@ -1,13 +1,15 @@
 const express = require('express')
 const ToDoList = require('./models/toDoList.model')
 const router = express.Router()
+const authenticateToken = require('./middlewares/auth.middleware')
 
-router.post('/create', async (req, res) => {
+router.post('/create', authenticateToken, async (req, res) => {
     try {
         const { date, tasks } = req.body
-        let toDoList = await ToDoList.findByDate(date)
+        const userId = req.user.userId
+        let toDoList = await ToDoList.findByDate(userId, date)
         if (toDoList.length === 0) {
-            toDoList = await ToDoList.create(req.body)
+            toDoList = await ToDoList.create({ userId, date, tasks })
             return res.status(200).json({ message: "Task created successfully" })
         }
         const list = toDoList[0]
@@ -20,19 +22,14 @@ router.post('/create', async (req, res) => {
     }
 })
 
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
     try {
         const { date } = req.query
-        if (!date) {
-            const toDoList = await ToDoList.findByDate(Date.now())
-            return res.status(200).json(toDoList)
-        }
+        const userId = req.user.userId
 
-        const toDoList = await ToDoList.find({
-            date: {
-                $eq: new Date(date)
-            }
-        })
+        const targetDate = date ? new Date(date) : new Date()
+
+        const toDoList = await ToDoList.findByDate(userId, targetDate)
         res.status(200).json(toDoList)
 
     } catch (error) {
@@ -40,7 +37,7 @@ router.get('/', async (req, res) => {
     }
 })
 
-router.delete('/:listId', async (req, res) => {
+router.delete('/:listId', authenticateToken, async (req, res) => {
     try {
         const { listId } = req.params
         const deletedList = await ToDoList.findByIdAndDelete(listId)
@@ -56,7 +53,7 @@ router.delete('/:listId', async (req, res) => {
     }
 })
 
-router.delete('/:listId/tasks/:taskId', async (req, res) => {
+router.delete('/:listId/tasks/:taskId', authenticateToken, async (req, res) => {
     try {
         const { listId, taskId } = req.params
         const deletedTask = await ToDoList.findByIdAndUpdate(
@@ -76,7 +73,7 @@ router.delete('/:listId/tasks/:taskId', async (req, res) => {
     }
 })
 
-router.patch('/:listId/tasks/:taskId', async (req, res) => {
+router.patch('/:listId/tasks/:taskId', authenticateToken, async (req, res) => {
     try {
         const { listId, taskId } = req.params
         const { name, status } = req.body
