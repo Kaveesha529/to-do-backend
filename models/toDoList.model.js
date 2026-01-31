@@ -1,6 +1,11 @@
 const mongoose = require('mongoose')
 
 const ToDoListSchema = mongoose.Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: [true]
+    },
     date: {
         type: Date,
         required: [true, "Please select the date"],
@@ -23,7 +28,7 @@ const ToDoListSchema = mongoose.Schema({
     timestamps: true
 })
 
-ToDoListSchema.statics.findByDate = function (date) {
+ToDoListSchema.statics.findByDate = function (userId, date) {
     const start = new Date(date)
     start.setUTCHours(0, 0, 0, 0)
 
@@ -31,6 +36,7 @@ ToDoListSchema.statics.findByDate = function (date) {
     end.setUTCHours(23, 59, 59, 999)
 
     return this.find({
+        userId: { $eq: userId },
         date: { $gte: start, $lte: end }
     })
 }

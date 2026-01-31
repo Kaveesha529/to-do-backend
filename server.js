@@ -4,6 +4,7 @@ const cors = require('cors')
 const express = require('express')
 const mongoose = require('mongoose')
 const toDoListRouter = require('./toDoList')
+const userRouter = require('./user')
 const app = express()
 
 app.use(cors({
@@ -12,6 +13,7 @@ app.use(cors({
 
 app.use(express.json())
 
+app.use('/api/user', userRouter)
 app.use('/api/todo-list', toDoListRouter)
 
 mongoose.connect(process.env.MONGO_URI)
