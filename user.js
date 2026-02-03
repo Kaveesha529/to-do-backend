@@ -1,6 +1,7 @@
 const express = require('express')
 const User = require('./models/user.model')
 const generateToken = require('./utils/jwt')
+const authenticateToken = require('./middlewares/auth.middleware')
 const router = express.Router()
 
 router.post('/register', async (req, res) => {
@@ -23,19 +24,41 @@ router.post('/login', async (req, res) => {
 
         const isMatch = await user.comparePassword(password)
         if (!isMatch) {
-            return res.status(200).json({ message: "Invalid credentials" })
+            return res.status(401).json({ message: "Invalid credentials" })
         }
 
         const token = generateToken(user._id)
 
-        res.status(200).json({
+        res.cookie("token", token, {
+            httpOnly: true,
+            sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+            secure: process.env.NODE_ENV === "production",
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        })
+
+        return res.status(200).json({
             message: "Login successfull",
-            token
         })
 
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
+})
+
+router.post('/logout', authenticateToken, (req, res) => {
+    res.clearCookie("token", {
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+        secure: process.env.NODE_ENV === "production",
+    })
+
+    return res.status(200).json({
+        message: "Logout successfull",
+    })
+})
+
+router.get('/auth/me', authenticateToken, (req, res) => {
+    res.json({ user: req.user })
 })
 
 module.exports = router
